@@ -7,9 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5F736A351CA834C4002599A7 /* libpq.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F736A341CA834C4002599A7 /* libpq.a */; };
+		5FE46DD01CA8200400C673A7 /* libpq.5.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FE46DCF1CA8200400C673A7 /* libpq.5.8.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
 		5FF29FC51CA8103400A6D937 /* PsqlLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 5FF29FC41CA8103400A6D937 /* PsqlLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5FF29FCC1CA8103400A6D937 /* PsqlLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FF29FC11CA8103300A6D937 /* PsqlLite.framework */; };
 		5FF29FD11CA8103400A6D937 /* PsqlLiteTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5FF29FD01CA8103400A6D937 /* PsqlLiteTests.m */; };
+		5FF29FDC1CA810D200A6D937 /* PsqlLite.m in Sources */ = {isa = PBXBuildFile; fileRef = 5FF29FDB1CA810D200A6D937 /* PsqlLite.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -23,12 +26,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5F736A341CA834C4002599A7 /* libpq.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpq.a; path = ../../../../../../opt/local/lib/postgresql95/libpq.a; sourceTree = "<group>"; };
+		5FE46DCF1CA8200400C673A7 /* libpq.5.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpq.5.8.dylib; path = /Users/jguillaumes/Documents/ProjectesXCode/PsqlLite/PsqlLite/libpq.5.8.dylib; sourceTree = "<absolute>"; };
 		5FF29FC11CA8103300A6D937 /* PsqlLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PsqlLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FF29FC41CA8103400A6D937 /* PsqlLite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PsqlLite.h; sourceTree = "<group>"; };
 		5FF29FC61CA8103400A6D937 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5FF29FCB1CA8103400A6D937 /* PsqlLiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PsqlLiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FF29FD01CA8103400A6D937 /* PsqlLiteTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PsqlLiteTests.m; sourceTree = "<group>"; };
 		5FF29FD21CA8103400A6D937 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5FF29FDB1CA810D200A6D937 /* PsqlLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PsqlLite.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +42,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F736A351CA834C4002599A7 /* libpq.a in Frameworks */,
+				5FE46DD01CA8200400C673A7 /* libpq.5.8.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,8 +79,10 @@
 		5FF29FC31CA8103400A6D937 /* PsqlLite */ = {
 			isa = PBXGroup;
 			children = (
+				5F736A341CA834C4002599A7 /* libpq.a */,
 				5FF29FC41CA8103400A6D937 /* PsqlLite.h */,
 				5FF29FC61CA8103400A6D937 /* Info.plist */,
+				5FF29FDB1CA810D200A6D937 /* PsqlLite.m */,
 			);
 			path = PsqlLite;
 			sourceTree = "<group>";
@@ -193,6 +203,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5FF29FDC1CA810D200A6D937 /* PsqlLite.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,6 +230,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -253,6 +265,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /opt/local/include/postgresql95;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -266,6 +279,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -294,6 +308,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /opt/local/include/postgresql95;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -314,6 +329,11 @@
 				INFOPLIST_FILE = PsqlLite/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib/postgresql95,
+					"$(PROJECT_DIR)/PsqlLite",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = name.guillaumes.jordi.PsqlLite;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -332,6 +352,11 @@
 				INFOPLIST_FILE = PsqlLite/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib/postgresql95,
+					"$(PROJECT_DIR)/PsqlLite",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = name.guillaumes.jordi.PsqlLite;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -379,6 +404,7 @@
 				5FF29FD71CA8103400A6D937 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		5FF29FD81CA8103400A6D937 /* Build configuration list for PBXNativeTarget "PsqlLiteTests" */ = {
 			isa = XCConfigurationList;
@@ -387,6 +413,7 @@
 				5FF29FDA1CA8103400A6D937 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

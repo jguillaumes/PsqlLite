@@ -7,6 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
+#import "PsqlLite.h"
 
 @interface PsqlLiteTests : XCTestCase
 
@@ -25,8 +26,41 @@
 }
 
 - (void)testExample {
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
+    PsqlConnection *pconn = [PsqlConnection alloc];
+    XCTAssertNotNil(pconn);
+    
+    [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftw" password:@"ftw"];
+    XCTAssert(pconn.isConnected);
+    
+    PsqlStatement *pst = [[PsqlStatement alloc] initWithString:@"select idviatge, nomviatge from viatge where idusuari = $1"
+                                                  pqConnection:pconn];
+    XCTAssertNotNil(pst);
+    XCTAssert(pst.isOK);
+    [pst setStringParmWithIndex:0 value:@"jguillaumes"];
+    
+    PsqlResult *pres = [pst execute];
+    XCTAssertNotNil(pres);
+    while(![pres isEOF]) {
+        NSNumber *idviatge  = [pres getNumberWithName:@"idviatge"];
+        NSString *nomViatge = [pres getStringWithName:@"nomviatge"];
+        NSLog([NSString stringWithFormat:@"%@ - %@", idviatge, nomViatge]);
+        [pres nextRow];
+    }
+ 
+    [pst close];
+    [pres close];
+    
+    [pst initWithString:@"select jpeg from jpeg where idfoto = $1" pqConnection:pconn];
+    [pst setIntParmWithIndex:0 value:1000];
+    pres = [pst execute];
+    
+    NSMutableData *data = [pres getBytesWithIndex:0];
+    [data writeToFile:@"/temp/thepic.jpg" atomically:true];
+    
+    [pres close];
+    [pconn close];
+    XCTAssert(!pconn.isConnected);
+    
 }
 
 - (void)testPerformanceExample {
