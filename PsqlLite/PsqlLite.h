@@ -53,6 +53,12 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 -(NSMutableData *) getBytesWithIndex:(int) colIndex;
 -(NSMutableData *) getBytesWithName:(NSString *) colName;
 
+-(NSDate *) getDateWithIndex:(int) colIndex format:(NSString*) format;
+-(NSDate *) getDateWithName:(NSString *) colName format:(NSString*) format;
+
+-(NSDate *) getDateWithIndex:(int) colIndex;
+-(NSDate *) getDateWithName:(NSString *) colName;
+
 -(void) close;
 @end
 
@@ -65,6 +71,7 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 - (Boolean) setLongParmWithIndex:(int)index value:(long) value;
 - (Boolean) setDoubleParmWithIndex:(int)index value:(double) value;
 
-- (PsqlResult *) execute;
+- (int) execute;
+- (PsqlResult *) executeQuery;
 - (void) close;
 @end

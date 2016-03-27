@@ -32,18 +32,19 @@
     [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftw" password:@"ftw"];
     XCTAssert(pconn.isConnected);
     
-    PsqlStatement *pst = [[PsqlStatement alloc] initWithString:@"select idviatge, nomviatge from viatge where idusuari = $1"
+    PsqlStatement *pst = [[PsqlStatement alloc] initWithString:@"select idviatge, nomviatge, dataviatge from viatge where idusuari = $1"
                                                   pqConnection:pconn];
     XCTAssertNotNil(pst);
     XCTAssert(pst.isOK);
     [pst setStringParmWithIndex:0 value:@"jguillaumes"];
     
-    PsqlResult *pres = [pst execute];
+    PsqlResult *pres = [pst executeQuery];
     XCTAssertNotNil(pres);
     while(![pres isEOF]) {
         NSNumber *idviatge  = [pres getNumberWithName:@"idviatge"];
         NSString *nomViatge = [pres getStringWithName:@"nomviatge"];
-        NSLog([NSString stringWithFormat:@"%@ - %@", idviatge, nomViatge]);
+        NSDate *dataviatge = [pres getDateWithIndex:2];
+        NSLog([NSString stringWithFormat:@"%@ - %@: %@", idviatge, nomViatge, dataviatge]);
         [pres nextRow];
     }
  
@@ -52,7 +53,7 @@
     
     [pst initWithString:@"select jpeg from jpeg where idfoto = $1" pqConnection:pconn];
     [pst setIntParmWithIndex:0 value:1000];
-    pres = [pst execute];
+    pres = [pst executeQuery];
     
     NSMutableData *data = [pres getBytesWithIndex:0];
     [data writeToFile:@"/temp/thepic.jpg" atomically:true];

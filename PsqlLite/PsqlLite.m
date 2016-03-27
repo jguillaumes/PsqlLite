@@ -207,6 +207,37 @@ PGresult *theResult = NULL;
     return theData;
 }
 
+-(NSDate *) getDateWithIndex:(int)colIndex format:(NSString *)format {
+    NSDate *theDate = nil;
+    NSString *valstr = [self getStringWithIndex:colIndex];
+    if (valstr != NULL) {
+        NSDateFormatter *df = [[NSDateFormatter alloc] init];
+        [df setDateFormat:format];
+        theDate = [df dateFromString:valstr];
+    }
+    return theDate;
+}
+
+-(NSDate *) getDateWithName:(NSString *)colName format:(NSString *)format {
+    NSDate *theDate = nil;
+    int colNum = 0;
+    
+    if (!self.isEOF) {
+        colNum = PQfnumber(theResult, [colName UTF8String]);
+        if (colNum != -1) {
+            theDate = [self getDateWithIndex:colNum format:format];
+        }
+    }
+    return theDate;
+}
+
+-(NSDate *) getDateWithIndex:(int)colIndex {
+    return [self getDateWithIndex:colIndex format:@"yyyy-MM-dd"];
+}
+
+-(NSDate *) getDateWithName:(NSString *)colName {
+    return [self getDateWithName:colName format:@"yyyy-MM-dd"];
+}
 
 -(Boolean) isBOF {
     return (!_isEmpty) && (_curRow == 0);
@@ -325,8 +356,36 @@ NSMutableArray *parametres = NULL;
     }
 }
 
+- (int) execute {
+    PGresult *res = NULL;
+    int ps = 0;
+    int nrecs = -1;
+    int i=0;
+    
+    if (_isOK) {
+        char **paramValues = calloc(sizeof(char*), numParams);
+        int *paramLengths = calloc(sizeof(int), numParams);
+        int *paramFormats = calloc(sizeof(int), numParams);
+        for (i=0; i<numParams; i++) {
+            paramFormats[i] = 0;
+            paramLengths[i] = 0;
+            paramValues[i]  = (char *) [parametres[i] UTF8String];
+        }
+        res = PQexecPrepared(theConn, [stmtName UTF8String], numParams, paramValues, paramLengths, paramFormats, 0);
+        free(paramValues);
+        free(paramLengths);
+        free(paramFormats);
+        ps = PQresultStatus(res);
+        if (ps == PGRES_COMMAND_OK ||
+            ps == PGRES_TUPLES_OK  ||
+            ps == PGRES_SINGLE_TUPLE) {
+            nrecs = atoi(PQcmdTuples(res));
+        }
+    }
+    return nrecs;
+}
 
-- (PsqlResult *) execute {
+- (PsqlResult *) executeQuery {
     PsqlResult *pr = NULL;
     PGresult *res = NULL;
     int i=0;
