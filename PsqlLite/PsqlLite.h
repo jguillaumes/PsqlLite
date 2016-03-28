@@ -19,7 +19,10 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 @interface PsqlConnection : NSObject
 
 - (PsqlConnection *) init;
-- (void) connectWithUrl:(NSString*)url userName:(NSString*)userName password:(NSString*)password;
+- (Boolean) connectWithUrl:(NSString *)url
+                  userName:(NSString *)userName
+                  password:(NSString *)password
+                     error:(NSError **)error;
 - (NSString *) getErrorMessage;
 - (Boolean) isConnected;
 - (Boolean) begin;
@@ -65,13 +68,15 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 @interface PsqlStatement : NSObject
 @property (readonly) Boolean isOK;
 
-- (PsqlStatement*) initWithString:(NSString*) sqlString pqConnection:         (PsqlConnection*) pqConnection;
+- (PsqlStatement*) initWithString:(NSString*) sqlString
+                     pqConnection:(PsqlConnection*) pqConnection;
+- (Boolean) prepare:(NSError **) error;
 - (Boolean) setStringParmWithIndex:(int)index value:(NSString *) value;
 - (Boolean) setIntParmWithIndex:(int)index value:(int) value;
 - (Boolean) setLongParmWithIndex:(int)index value:(long) value;
 - (Boolean) setDoubleParmWithIndex:(int)index value:(double) value;
 
-- (int) execute;
-- (PsqlResult *) executeQuery;
+- (int) execute:(NSError **)error;
+- (PsqlResult *) executeQuery:(NSError**)error;
 - (void) close;
 @end

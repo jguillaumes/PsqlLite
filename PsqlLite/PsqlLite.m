@@ -18,54 +18,67 @@
 
 // MARK: - PsqlConnection
 
+static NSString *errorDomain = @"name.guillaumes.jordi.PsqlLite";
+
+
+@interface PsqlConnection()
+@property (readonly) PGconn *conn;
+@end
+
 @implementation PsqlConnection : NSObject
 
-PGconn *conn;
 
 
 - (PsqlConnection *) init {
     self = [super init];
-    conn = NULL;
+    _conn = NULL;
     return self;
 }
 
-- (void) connectWithUrl:(NSString*)url
-               userName:(NSString*)userName
-               password:(NSString*)password {
+- (Boolean) connectWithUrl:(NSString*)url
+                  userName:(NSString*)userName
+                  password:(NSString*)password
+                     error:(NSError**)error {
     NSString *theUrl = [ NSString stringWithFormat:@"%@?user=%@&password=%@", url, userName, password] ;
-    conn = PQconnectdb([theUrl UTF8String]);
+    _conn = PQconnectdb([theUrl UTF8String]);
+    if (![self isConnected]) {
+        if (error != NULL) {
+            NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [self getErrorMessage] };
+            *error = [[NSError alloc] initWithDomain:errorDomain
+                                               code: 1
+                                           userInfo: userInfo];
+        }
+        return false;
+    }
+    return true;
 }
 
 - (NSString *) getErrorMessage {
-    NSString *msg = [NSString stringWithFormat: @"%s", PQerrorMessage(conn)];
+    NSString *msg = [NSString stringWithFormat: @"%s", PQerrorMessage(_conn)];
     return msg;
 }
 
 - (Boolean) isConnected {
-    return PQstatus(conn) == CONNECTION_OK;
+    return PQstatus(_conn) == CONNECTION_OK;
 }
 
 - (Boolean) begin {
-    PGresult *pres = PQexec(conn, "begin");
+    PGresult *pres = PQexec(_conn, "begin");
     return (PQresultStatus(pres) == PGRES_COMMAND_OK);
 }
 
 - (Boolean) commit {
-    PGresult *pres = PQexec(conn, "commit");
+    PGresult *pres = PQexec(_conn, "commit");
     return (PQresultStatus(pres) == PGRES_COMMAND_OK);
 }
 
 - (Boolean) rollback {
-    PGresult *pres = PQexec(conn, "rollback");
+    PGresult *pres = PQexec(_conn, "rollback");
     return (PQresultStatus(pres) == PGRES_COMMAND_OK);
 }
 
 - (void) close {
-    PQfinish(conn);
-}
-
-- (PGconn *) getConn {
-    return conn;
+    PQfinish(_conn);
 }
 
 - (void) destroy {
@@ -102,6 +115,13 @@ PGresult *theResult = NULL;
 
 -(NSString *) getStringWithIndex:(int) colIndex encoding:(NSStringEncoding) encoding {
     NSString *theValue = NULL;
+    
+    if (colIndex < 0 || colIndex > _columnCount) {
+        NSException *exc = [[NSException alloc] initWithName:@"colOutOfRange"
+                                                      reason:@"Column out of range"
+                                                    userInfo:NULL ];
+        [exc raise];
+    }
     if (!self.isEOF) {
         if (PQgetisnull(theResult, _curRow, colIndex) != 1) {
             // theValue = [NSString stringWithFormat:@"%s", PQgetvalue(theResult, _curRow, colIndex)];
@@ -182,6 +202,12 @@ PGresult *theResult = NULL;
     int len=0;
     size_t binLen=0;
     
+    if (colIndex < 0 || colIndex > _columnCount) {
+        NSException *exc = [[NSException alloc] initWithName:@"colOutOfRange"
+                                                      reason:@"Column out of range"
+                                                    userInfo:NULL ];
+        [exc raise];
+    }
     if (!self.isEOF) {
         if (PQgetisnull(theResult, _curRow, colIndex) != 1) {
             len    = PQgetlength(theResult, _curRow, colIndex);
@@ -288,8 +314,9 @@ PGresult *theResult = NULL;
 
 @implementation PsqlStatement : NSObject
 
-NSString *stmtName = NULL;
-PGconn *theConn;
+NSString *theSqlString = nil;
+NSString *stmtName  = nil;
+PsqlConnection __weak *theConn;
 int numParams = 0;
 NSMutableArray *parametres = NULL;
 
@@ -297,19 +324,35 @@ NSMutableArray *parametres = NULL;
 - (PsqlStatement*) initWithString:(NSString*) sqlString
                      pqConnection:(PsqlConnection*) pqConnection {
     self = [super init];
-    theConn = pqConnection.getConn;
-    stmtName = [[NSProcessInfo processInfo] globallyUniqueString];
-    PGresult *pres = PQprepare(theConn, [stmtName UTF8String],
-                               [sqlString UTF8String], 0, NULL);
+    theConn   = pqConnection;
+    stmtName  = [[NSProcessInfo processInfo] globallyUniqueString];
+    theSqlString = sqlString;
+    _isOK = false;
+    return self;
+}
+
+- (Boolean) prepare:(NSError **) error {
+    PGresult *pres = PQprepare([theConn conn], [stmtName UTF8String],
+                               [theSqlString UTF8String], 0, NULL);
+    _isOK = false;
     if (pres != NULL) {
         if (PQresultStatus(pres) == PGRES_COMMAND_OK) {
-            pres = PQdescribePrepared(theConn, [stmtName UTF8String]);
+            pres = PQdescribePrepared(theConn.conn, [stmtName UTF8String]);
             numParams = PQnparams(pres);
             parametres = [[NSMutableArray alloc] initWithCapacity:numParams];
             _isOK = true;
+            if (error != NULL) *error = nil;
         }
     }
-    return self;
+    if (! _isOK) {
+        if (error != NULL) {
+            NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [theConn getErrorMessage] };
+            *error = [[NSError alloc] initWithDomain:errorDomain
+                                                code: 2
+                                            userInfo: userInfo];
+        }
+    }
+    return _isOK;
 }
 
 - (Boolean) setStringParmWithIndex:(int)index value:(NSString *) value {
@@ -317,6 +360,10 @@ NSMutableArray *parametres = NULL;
         parametres[index] = value;
         return true;
     } else {
+        NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
+                                                      reason:@"Parameter index out of range"
+                                                    userInfo:NULL ];
+        [exc raise];
         return false;
     }
 }
@@ -329,6 +376,10 @@ NSMutableArray *parametres = NULL;
         parametres[index] = valstr;
         return true;
     } else {
+        NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
+                                                      reason:@"Parameter index out of range"
+                                                    userInfo:NULL ];
+        [exc raise];
         return false;
     }
 }
@@ -340,6 +391,10 @@ NSMutableArray *parametres = NULL;
         parametres[index] = valstr;
         return true;
     } else {
+        NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
+                                                      reason:@"Parameter index out of range"
+                                                    userInfo:NULL ];
+        [exc raise];
         return false;
     }
 }
@@ -352,11 +407,15 @@ NSMutableArray *parametres = NULL;
         parametres[index] = valstr;
         return true;
     } else {
+        NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
+                                                      reason:@"Parameter index out of range"
+                                                    userInfo:NULL ];
+        [exc raise];
         return false;
     }
 }
 
-- (int) execute {
+- (int) execute:(NSError**) error {
     PGresult *res = NULL;
     int ps = 0;
     int nrecs = -1;
@@ -371,7 +430,7 @@ NSMutableArray *parametres = NULL;
             paramLengths[i] = 0;
             paramValues[i]  = (char *) [parametres[i] UTF8String];
         }
-        res = PQexecPrepared(theConn, [stmtName UTF8String], numParams, paramValues, paramLengths, paramFormats, 0);
+        res = PQexecPrepared([theConn conn], [stmtName UTF8String], numParams, paramValues, paramLengths, paramFormats, 0);
         free(paramValues);
         free(paramLengths);
         free(paramFormats);
@@ -380,15 +439,26 @@ NSMutableArray *parametres = NULL;
             ps == PGRES_TUPLES_OK  ||
             ps == PGRES_SINGLE_TUPLE) {
             nrecs = atoi(PQcmdTuples(res));
+            if (error != NULL) error = nil;
+        } else {
+            _isOK = false;
+            if (error != NULL) {
+                NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [theConn getErrorMessage] };
+                *error = [[NSError alloc] initWithDomain:errorDomain
+                                                    code: 3
+                                                userInfo: userInfo];
+            }
         }
     }
     return nrecs;
 }
 
-- (PsqlResult *) executeQuery {
+- (PsqlResult *) executeQuery:(NSError **) error {
     PsqlResult *pr = NULL;
     PGresult *res = NULL;
+    int ps = 0;
     int i=0;
+    
     if (_isOK) {
         char **paramValues = calloc(sizeof(char*), numParams);
         int *paramLengths = calloc(sizeof(int), numParams);
@@ -398,16 +468,26 @@ NSMutableArray *parametres = NULL;
             paramLengths[i] = 0;
             paramValues[i]  = (char *) [parametres[i] UTF8String];
         }
-        res = PQexecPrepared(theConn, [stmtName UTF8String], numParams, paramValues, paramLengths, paramFormats, 0);
-        pr = [[PsqlResult alloc] initWithResult:res];
+        res = PQexecPrepared([theConn conn], [stmtName UTF8String], numParams, paramValues, paramLengths, paramFormats, 0);
         free(paramValues);
         free(paramLengths);
         free(paramFormats);
-        // PQprint(stderr, res, &printopt);
-        return pr;
-    } else {
-        return NULL;
+        ps = PQresultStatus(res);
+        if (ps == PGRES_TUPLES_OK ||
+            ps == PGRES_SINGLE_TUPLE) {
+            pr = [[PsqlResult alloc] initWithResult:res];
+            if (error != NULL) error = nil;
+        } else {
+            _isOK = false;
+            if (error != NULL) {
+                NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [theConn getErrorMessage] };
+                *error = [[NSError alloc] initWithDomain:errorDomain
+                                                    code: 3
+                                                userInfo: userInfo];
+            }
+        }
     }
+    return pr;
 }
 
 - (void) close {
