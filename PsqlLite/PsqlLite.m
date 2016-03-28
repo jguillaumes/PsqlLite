@@ -18,16 +18,20 @@
 
 // MARK: - PsqlConnection
 
-static NSString *errorDomain = @"name.guillaumes.jordi.PsqlLite";
+NSString *PsqlErrorDomain = @"name.guillaumes.jordi.PsqlLite";
+NSBundle *PsqlBundle = NULL;
 
+__attribute__((constructor))
+static void PsqlLiteInitializer() {
+    PsqlBundle = [NSBundle bundleForClass:[PsqlConnection class]];
+    NSLog(@"Bundle assigned to %@", PsqlBundle);
+}
 
 @interface PsqlConnection()
 @property (readonly) PGconn *conn;
 @end
 
 @implementation PsqlConnection : NSObject
-
-
 
 - (PsqlConnection *) init {
     self = [super init];
@@ -44,9 +48,9 @@ static NSString *errorDomain = @"name.guillaumes.jordi.PsqlLite";
     if (![self isConnected]) {
         if (error != NULL) {
             NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [self getErrorMessage] };
-            *error = [[NSError alloc] initWithDomain:errorDomain
-                                               code: 1
-                                           userInfo: userInfo];
+            *error = [[NSError alloc] initWithDomain:PsqlErrorDomain
+                                                code: 1
+                                            userInfo: userInfo];
         }
         return false;
     }
@@ -118,8 +122,8 @@ PGresult *theResult = NULL;
     
     if (colIndex < 0 || colIndex > _columnCount) {
         NSException *exc = [[NSException alloc] initWithName:@"colOutOfRange"
-                                                      reason:@"Column out of range"
-                                                    userInfo:NULL ];
+                                                      reason:NSLocalizedStringFromTableInBundle(@"colOutOfRange", nil, PsqlBundle, @"Columna fora d'abast")
+                                                        userInfo:NULL ];
         [exc raise];
     }
     if (!self.isEOF) {
@@ -204,7 +208,7 @@ PGresult *theResult = NULL;
     
     if (colIndex < 0 || colIndex > _columnCount) {
         NSException *exc = [[NSException alloc] initWithName:@"colOutOfRange"
-                                                      reason:@"Column out of range"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"colOutOfRange", nil, PsqlBundle, @"Columna fora d'abast")
                                                     userInfo:NULL ];
         [exc raise];
     }
@@ -347,7 +351,7 @@ NSMutableArray *parametres = NULL;
     if (! _isOK) {
         if (error != NULL) {
             NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [theConn getErrorMessage] };
-            *error = [[NSError alloc] initWithDomain:errorDomain
+            *error = [[NSError alloc] initWithDomain:PsqlErrorDomain
                                                 code: 2
                                             userInfo: userInfo];
         }
@@ -361,7 +365,7 @@ NSMutableArray *parametres = NULL;
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
-                                                      reason:@"Parameter index out of range"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"paramOutOfRange", nil, PsqlBundle, @"Parametre fora d'abast")
                                                     userInfo:NULL ];
         [exc raise];
         return false;
@@ -377,7 +381,7 @@ NSMutableArray *parametres = NULL;
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
-                                                      reason:@"Parameter index out of range"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"paramOutOfRange", nil, PsqlBundle, @"Parametre fora d'abast")
                                                     userInfo:NULL ];
         [exc raise];
         return false;
@@ -392,7 +396,7 @@ NSMutableArray *parametres = NULL;
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
-                                                      reason:@"Parameter index out of range"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"paramOutOfRange", nil, PsqlBundle, @"Parametre fora d'abast")
                                                     userInfo:NULL ];
         [exc raise];
         return false;
@@ -408,7 +412,7 @@ NSMutableArray *parametres = NULL;
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
-                                                      reason:@"Parameter index out of range"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"paramOutOfRange", nil, PsqlBundle, @"Parametre fora d'abast")
                                                     userInfo:NULL ];
         [exc raise];
         return false;
@@ -444,7 +448,7 @@ NSMutableArray *parametres = NULL;
             _isOK = false;
             if (error != NULL) {
                 NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [theConn getErrorMessage] };
-                *error = [[NSError alloc] initWithDomain:errorDomain
+                *error = [[NSError alloc] initWithDomain:PsqlErrorDomain
                                                     code: 3
                                                 userInfo: userInfo];
             }
@@ -481,7 +485,7 @@ NSMutableArray *parametres = NULL;
             _isOK = false;
             if (error != NULL) {
                 NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [theConn getErrorMessage] };
-                *error = [[NSError alloc] initWithDomain:errorDomain
+                *error = [[NSError alloc] initWithDomain:PsqlErrorDomain
                                                     code: 3
                                                 userInfo: userInfo];
             }

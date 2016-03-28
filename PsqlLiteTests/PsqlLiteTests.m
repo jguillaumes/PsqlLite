@@ -45,7 +45,7 @@
     if (!pst.isOK) NSLog(@"Error de connexió: %@\n", error);
     XCTAssertNotNil(pst);
 
-    [pst setStringParmWithIndex:0 value:@"jguillaumes"];
+    [pst setStringParmWithIndex:1 value:@"jguillaumes"];
     
     PsqlResult *pres = [pst executeQuery:&error];
     XCTAssertNotNil(pres);
