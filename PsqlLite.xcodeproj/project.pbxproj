@@ -10,6 +10,8 @@
 		5F05D2B71CA94D0F00EB31B1 /* Catalan.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 5F05D2B61CA94D0F00EB31B1 /* Catalan.lproj */; };
 		5F05D2B91CA94D1600EB31B1 /* English.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 5F05D2B81CA94D1600EB31B1 /* English.lproj */; };
 		5F736A351CA834C4002599A7 /* libpq.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F736A341CA834C4002599A7 /* libpq.a */; };
+		5FB37A5A1CAE9F27007C47BA /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5FB37A581CAE9F27007C47BA /* LICENSE.txt */; };
+		5FB37A5B1CAE9F27007C47BA /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 5FB37A591CAE9F27007C47BA /* README.md */; };
 		5FF29FC51CA8103400A6D937 /* PsqlLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 5FF29FC41CA8103400A6D937 /* PsqlLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5FF29FCC1CA8103400A6D937 /* PsqlLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FF29FC11CA8103300A6D937 /* PsqlLite.framework */; };
 		5FF29FD11CA8103400A6D937 /* PsqlLiteTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5FF29FD01CA8103400A6D937 /* PsqlLiteTests.m */; };
@@ -30,6 +32,8 @@
 		5F05D2B61CA94D0F00EB31B1 /* Catalan.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Catalan.lproj; sourceTree = "<group>"; };
 		5F05D2B81CA94D1600EB31B1 /* English.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = English.lproj; sourceTree = "<group>"; };
 		5F736A341CA834C4002599A7 /* libpq.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpq.a; path = ../../../../../../opt/local/lib/postgresql95/libpq.a; sourceTree = "<group>"; };
+		5FB37A581CAE9F27007C47BA /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		5FB37A591CAE9F27007C47BA /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		5FF29FC11CA8103300A6D937 /* PsqlLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PsqlLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FF29FC41CA8103400A6D937 /* PsqlLite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PsqlLite.h; sourceTree = "<group>"; };
 		5FF29FC61CA8103400A6D937 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -62,6 +66,8 @@
 		5FF29FB71CA8103300A6D937 = {
 			isa = PBXGroup;
 			children = (
+				5FB37A581CAE9F27007C47BA /* LICENSE.txt */,
+				5FB37A591CAE9F27007C47BA /* README.md */,
 				5F05D2B81CA94D1600EB31B1 /* English.lproj */,
 				5F05D2B61CA94D0F00EB31B1 /* Catalan.lproj */,
 				5FF29FC31CA8103400A6D937 /* PsqlLite */,
@@ -189,6 +195,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5FB37A5A1CAE9F27007C47BA /* LICENSE.txt in Resources */,
 				5F05D2B71CA94D0F00EB31B1 /* Catalan.lproj in Resources */,
 				5F05D2B91CA94D1600EB31B1 /* English.lproj in Resources */,
 			);
@@ -208,6 +215,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5FB37A5B1CAE9F27007C47BA /* README.md in Sources */,
 				5FF29FDC1CA810D200A6D937 /* PsqlLite.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
