@@ -18,12 +18,12 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 
 @interface PsqlConnection : NSObject
 
-- (PsqlConnection *) init;
-- (Boolean) connectWithUrl:(NSString *)url
-                  userName:(NSString *)userName
-                  password:(NSString *)password
+- (nonnull PsqlConnection *) init;
+- (Boolean) connectWithUrl:(nonnull NSString *)url
+                  userName:(nonnull NSString *)userName
+                  password:(nonnull NSString *)password
                      error:(NSError **)error;
-- (NSString *) getErrorMessage;
+- (nonnull NSString *) getErrorMessage;
 - (Boolean) isConnected;
 - (Boolean) begin;
 - (Boolean) commit;
@@ -44,23 +44,23 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 -(Boolean) firstRow;
 -(Boolean) lastRow;
 
--(NSString *) getStringWithIndex:(int) colIndex;
--(NSString *) getStringWithName:(NSString *) colName;
+-(nullable NSString *) getStringWithIndex:(int) colIndex;
+-(nullable NSString *) getStringWithName:(nonnull NSString *) colName;
 
 -(int) getIntWithIndex:(int) colIndex;
--(int) getIntWithName:(NSString *) colName;
+-(int) getIntWithName:(nonnull NSString *) colName;
 
--(NSNumber *) getNumberWithIndex:(int) colIndex;
--(NSNumber *) getNumberWithName:(NSString *) colName;
+-(nullable NSNumber *) getNumberWithIndex:(int) colIndex;
+-(nullable NSNumber *) getNumberWithName:(nonnull NSString *) colName;
 
--(NSMutableData *) getBytesWithIndex:(int) colIndex;
--(NSMutableData *) getBytesWithName:(NSString *) colName;
+-(nullable NSMutableData *) getBytesWithIndex:(int) colIndex;
+-(nullable NSMutableData *) getBytesWithName:(nonnull NSString *) colName;
 
--(NSDate *) getDateWithIndex:(int) colIndex format:(NSString*) format;
--(NSDate *) getDateWithName:(NSString *) colName format:(NSString*) format;
+-(nullable NSDate *) getDateWithIndex:(int) colIndex format:(nonnull NSString*) format;
+-(nullable NSDate *) getDateWithName:(nonnull NSString *) colName format:(nonnull NSString*) format;
 
--(NSDate *) getDateWithIndex:(int) colIndex;
--(NSDate *) getDateWithName:(NSString *) colName;
+-(nullable NSDate *) getDateWithIndex:(int) colIndex;
+-(nullable NSDate *) getDateWithName:(nonnull NSString *) colName;
 
 -(void) close;
 @end
@@ -68,15 +68,16 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 @interface PsqlStatement : NSObject
 @property (readonly) Boolean isOK;
 
-- (PsqlStatement*) initWithString:(NSString*) sqlString
-                     pqConnection:(PsqlConnection*) pqConnection;
+- (nonnull PsqlStatement*) initWithString:(nonnull NSString*) sqlString
+                             pqConnection:(nonnull PsqlConnection*) pqConnection;
 - (Boolean) prepare:(NSError **) error;
-- (Boolean) setStringParmWithIndex:(int)index value:(NSString *) value;
+- (Boolean) setStringParmWithIndex:(int)index value:(nullable NSString *) value;
 - (Boolean) setIntParmWithIndex:(int)index value:(int) value;
 - (Boolean) setLongParmWithIndex:(int)index value:(long) value;
 - (Boolean) setDoubleParmWithIndex:(int)index value:(double) value;
+- (nonnull NSString *) getStatementName;
 
 - (int) execute:(NSError **)error;
-- (PsqlResult *) executeQuery:(NSError**)error;
+- (nullable PsqlResult *) executeQuery:( NSError  **)error;
 - (void) close;
 @end

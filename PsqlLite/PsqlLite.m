@@ -10,12 +10,6 @@
 #include <stdlib.h>
 #import <libpq-fe.h>
 
-/*
- static PQprintOpt printopt = {
- 1, 1, 0, 0, 0, 0, " ", "", "", NULL
- };
- */
-
 // MARK: - PsqlConnection
 
 NSString *PsqlErrorDomain = @"name.guillaumes.jordi.PsqlLite";
@@ -24,7 +18,9 @@ NSBundle *PsqlBundle = NULL;
 __attribute__((constructor))
 static void PsqlLiteInitializer() {
     PsqlBundle = [NSBundle bundleForClass:[PsqlConnection class]];
+#ifdef DEBUG
     NSLog(@"Bundle assigned to %@", PsqlBundle);
+#endif
 }
 
 @interface PsqlConnection()
@@ -99,8 +95,9 @@ static void PsqlLiteInitializer() {
 -(PsqlResult*) initWithResult:(PGresult *) pres;
 @end
 
-@implementation PsqlResult
-PGresult *theResult = NULL;
+@implementation PsqlResult {
+    PGresult *theResult;
+}
 
 -(PsqlResult *) initWithResult:(PGresult *) result {
     self = [super init];
@@ -316,29 +313,49 @@ PGresult *theResult = NULL;
 
 // MARK: - PsqlStatement
 
-@implementation PsqlStatement : NSObject
+@implementation PsqlStatement {
+    NSString  * _Nonnull theSqlString;
+    NSString  * _Nullable stmtName;
+    PsqlConnection __weak *theConn;
+    int numParams;
+    NSMutableArray *parametres;
+};
 
-NSString *theSqlString = nil;
-NSString *stmtName  = nil;
-PsqlConnection __weak *theConn;
-int numParams = 0;
-NSMutableArray *parametres = NULL;
-
+static int sequence=0;
 
 - (PsqlStatement*) initWithString:(NSString*) sqlString
                      pqConnection:(PsqlConnection*) pqConnection {
+    
     self = [super init];
     theConn   = pqConnection;
-    stmtName  = [[NSProcessInfo processInfo] globallyUniqueString];
     theSqlString = sqlString;
     _isOK = false;
+    
+    if (stmtName != nil) {
+        [self unPrepare];
+        stmtName = nil;
+    }
+    
     return self;
 }
 
+-(NSString *) getStatementName {
+    return stmtName;
+}
+
 - (Boolean) prepare:(NSError **) error {
+    int theSeq;
+    _isOK = false;
+    @synchronized (self) {
+        theSeq = ++sequence;
+    }
+    stmtName  = [[NSString alloc] initWithFormat:@"STM%09d", theSeq];
+#ifdef DEBUG
+    NSLog(@"Created statement %@",stmtName);
+#endif
+
     PGresult *pres = PQprepare([theConn conn], [stmtName UTF8String],
                                [theSqlString UTF8String], 0, NULL);
-    _isOK = false;
     if (pres != NULL) {
         if (PQresultStatus(pres) == PGRES_COMMAND_OK) {
             pres = PQdescribePrepared(theConn.conn, [stmtName UTF8String]);
@@ -494,9 +511,23 @@ NSMutableArray *parametres = NULL;
     return pr;
 }
 
+- (void) unPrepare {
+    NSString *deallocCmd = [ NSString stringWithFormat:@"DEALLOCATE %@", stmtName ];
+#ifdef DEBUG
+    NSLog(@"Deallocating prepared statement %@",stmtName);
+#endif
+    PQexec([theConn conn], [deallocCmd cStringUsingEncoding:NSUTF8StringEncoding]);
+    _isOK = false;
+    stmtName = NULL;
+}
+
 - (void) close {
-    stmtName = nil;
     parametres = nil;
 }
+
+- (void) dealloc {
+    [self unPrepare];
+}
+
 @end
 

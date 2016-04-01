@@ -25,35 +25,78 @@
     [super tearDown];
 }
 
-- (void)testExample {
+- (void)testConnection {
+    PsqlConnection *pconn = [[PsqlConnection alloc] init];
+    NSError *error;
+
+    [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftw" password:@"ftw" error:&error];
+    XCTAssert( [pconn isConnected] );
+    [pconn close];
+    pconn = nil;
+    
+    pconn = [[PsqlConnection alloc] init];
+    [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftwu" password:@"ftw" error:&error];
+    XCTAssertNotNil(error);
+    NSLog(@"Error de connexió: %@\n", error);
+    pconn = nil;
+    
+    pconn = [[PsqlConnection alloc] init];
+    [pconn connectWithUrl:@"postgres://doesnotexist:5432/ftw" userName:@"doesntmatter" password:@"doesntmatter" error:&error];
+    XCTAssertNotNil(error);
+    NSLog(@"Error de connexió: %@\n", error);
+    pconn = nil;
+    
+}
+
+- (void) testPrepare {
+    NSError *error;
+    
     PsqlConnection *pconn = [PsqlConnection alloc];
-    PsqlConnection *pcone = [PsqlConnection alloc];
+    [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftw" password:@"ftw" error:&error];
+    XCTAssert(pconn.isConnected);
+
+    PsqlStatement *pst = [[PsqlStatement alloc] initWithString:@"select idviatge, nomviatge, dataviatge from viatge where idusuari = $1"
+                                                  pqConnection:pconn];
+    XCTAssertNotNil(pst);
+    XCTAssert(![pst isOK]);
+    
+    [pst prepare:&error];
+    XCTAssertNil(error);
+    XCTAssert([pst isOK]);
+    
+    pst = nil;
+    pst = [[PsqlStatement alloc] initWithString:@"garbage sql statement"
+                                   pqConnection:pconn];
+    [pst prepare:&error];
+    XCTAssertNotNil(error);
+    NSLog(@"Expected prepare error: %@", error);
+    
+    [pst close];
+}
+
+- (void)testExecute {
+    PsqlConnection *pconn = [PsqlConnection alloc];
     XCTAssertNotNil(pconn);
     NSError *error;
     
     [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftw" password:@"ftw" error:&error];
     XCTAssert(pconn.isConnected);
 
-    [pcone connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftwu" password:@"ftw" error:&error];
-    XCTAssert(!pcone.isConnected);
-    NSLog(@"Error de connexió: %@\n", error);
     
     PsqlStatement *pst = [[PsqlStatement alloc] initWithString:@"select idviatge, nomviatge, dataviatge from viatge where idusuari = $1"
                                                   pqConnection:pconn];
     [pst prepare:&error];
     XCTAssert(pst.isOK);
-    if (!pst.isOK) NSLog(@"Error de connexió: %@\n", error);
-    XCTAssertNotNil(pst);
 
-    [pst setStringParmWithIndex:1 value:@"jguillaumes"];
+    [pst setStringParmWithIndex:0 value:@"jguillaumes"];
     
     PsqlResult *pres = [pst executeQuery:&error];
     XCTAssertNotNil(pres);
     XCTAssert(![pres isEmpty]);
     while(![pres isEOF]) {
-        NSNumber *idviatge  = [pres getNumberWithName:@"idviatge"];
-        NSString *nomViatge = [pres getStringWithName:@"nomviatge"];
-        NSDate *dataviatge = [pres getDateWithIndex:2];
+        NSNumber *idviatge   = [pres getNumberWithName:@"idviatge"];
+        NSString *nomViatge  = [pres getStringWithName:@"nomviatge"];
+        NSDate   *dataviatge = [pres getDateWithIndex:2];
         NSLog([NSString stringWithFormat:@"%@ - %@: %@", idviatge, nomViatge, dataviatge]);
         [pres nextRow];
     }
@@ -70,17 +113,19 @@
     NSMutableData *data = [pres getBytesWithIndex:0];
     [data writeToFile:@"/temp/thepic.jpg" atomically:true];
     
+    [pst close];
+    
     [pres close];
     [pconn close];
     XCTAssert(!pconn.isConnected);
     
 }
-
+/*
 - (void)testPerformanceExample {
     // This is an example of a performance test case.
     [self measureBlock:^{
         // Put the code you want to measure the time of here.
     }];
 }
-
+*/
 @end
