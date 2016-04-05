@@ -18,7 +18,7 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 
 @interface PsqlConnection : NSObject
 
-- (nonnull PsqlConnection *) init;
+- (nonnull PsqlConnection *) init NS_DESIGNATED_INITIALIZER;
 - (Boolean) connectWithUrl:(nonnull NSString *)url
                   userName:(nonnull NSString *)userName
                   password:(nonnull NSString *)password
@@ -44,6 +44,7 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 -(Boolean) firstRow;
 -(Boolean) lastRow;
 
+
 -(nullable NSString *) getStringWithIndex:(int) colIndex;
 -(nullable NSString *) getStringWithName:(nonnull NSString *) colName;
 
@@ -56,11 +57,15 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 -(nullable NSMutableData *) getBytesWithIndex:(int) colIndex;
 -(nullable NSMutableData *) getBytesWithName:(nonnull NSString *) colName;
 
--(nullable NSDate *) getDateWithIndex:(int) colIndex format:(nonnull NSString*) format;
--(nullable NSDate *) getDateWithName:(nonnull NSString *) colName format:(nonnull NSString*) format;
+-(nullable NSDate *) getDateTimeWithIndex:(int) colIndex format:(nonnull NSString*) format;
+-(nullable NSDate *) getDateTimeWithName:(nonnull NSString *) colName format:(nonnull NSString*) format;
 
 -(nullable NSDate *) getDateWithIndex:(int) colIndex;
 -(nullable NSDate *) getDateWithName:(nonnull NSString *) colName;
+
+-(nullable NSDate *) getDateTimeWithIndex:(int) colIndex;
+-(nullable NSDate *) getDateTimeWithName:(nonnull NSString *) colName;
+
 
 -(void) close;
 @end
@@ -68,8 +73,9 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 @interface PsqlStatement : NSObject
 @property (readonly) Boolean isOK;
 
+- (PsqlStatement  * _Null_unspecified ) init NS_DESIGNATED_INITIALIZER;
 - (nonnull PsqlStatement*) initWithString:(nonnull NSString*) sqlString
-                             pqConnection:(nonnull PsqlConnection*) pqConnection;
+                             pqConnection:(nonnull PsqlConnection*) pqConnection NS_DESIGNATED_INITIALIZER;
 - (Boolean) prepare:(NSError **) error;
 - (Boolean) setStringParmWithIndex:(int)index value:(nullable NSString *) value;
 - (Boolean) setIntParmWithIndex:(int)index value:(int) value;

@@ -29,7 +29,7 @@ static void PsqlLiteInitializer() {
 
 @implementation PsqlConnection : NSObject
 
-- (PsqlConnection *) init {
+- (PsqlConnection *) init  {
     self = [super init];
     _conn = NULL;
     return self;
@@ -145,6 +145,13 @@ static void PsqlLiteInitializer() {
         colNum = PQfnumber(theResult, [colName UTF8String]);
         if (colNum != -1) {
             theValue = [self getStringWithIndex:colNum encoding: encoding];
+        } else {
+            NSString *errFmt = NSLocalizedStringFromTableInBundle(@"columnNotFound", nil, PsqlBundle, @"Columna no trobada");
+            NSString *errMsg = [NSString stringWithFormat:errFmt, colName];
+            NSException *exc = [[NSException alloc] initWithName:@"columnNotFound"
+                                                          reason:errMsg
+                                                        userInfo:NULL ];
+            [exc raise];
         }
     }
     return theValue;
@@ -229,42 +236,64 @@ static void PsqlLiteInitializer() {
         colNum = PQfnumber(theResult, [colName UTF8String]);
         if (colNum != -1) {
             theData = [self getBytesWithIndex:colNum];
+        } else {
+            NSException *exc = [[NSException alloc] initWithName:@"columnNotFound"
+                                                          reason:NSLocalizedStringFromTableInBundle(@"columnNotFound", nil, PsqlBundle, @"Columna no trobada")
+                                                        userInfo:NULL ];
+            [exc raise];
         }
     }
     return theData;
 }
 
--(NSDate *) getDateWithIndex:(int)colIndex format:(NSString *)format {
+-(NSDate *) getDateTimeWithIndex:(int)colIndex format:(NSString *)format {
     NSDate *theDate = nil;
     NSString *valstr = [self getStringWithIndex:colIndex];
     if (valstr != NULL) {
         NSDateFormatter *df = [[NSDateFormatter alloc] init];
         [df setDateFormat:format];
+        [df setLenient:true];
         theDate = [df dateFromString:valstr];
     }
     return theDate;
 }
 
--(NSDate *) getDateWithName:(NSString *)colName format:(NSString *)format {
+-(NSDate *) getDateTimeWithName:(NSString *)colName format:(NSString *)format {
     NSDate *theDate = nil;
     int colNum = 0;
     
     if (!self.isEOF) {
         colNum = PQfnumber(theResult, [colName UTF8String]);
         if (colNum != -1) {
-            theDate = [self getDateWithIndex:colNum format:format];
+            theDate = [self getDateTimeWithIndex:colNum format:format];
+        } else {
+            NSString *errFmt = NSLocalizedStringFromTableInBundle(@"columnNotFound", nil, PsqlBundle, @"Columna no trobada");
+            NSString *errMsg = [NSString stringWithFormat:errFmt, colName];
+            NSException *exc = [[NSException alloc] initWithName:@"columnNotFound"
+                                                          reason:errMsg
+                                                        userInfo:NULL ];
+            [exc raise];
         }
     }
     return theDate;
 }
 
 -(NSDate *) getDateWithIndex:(int)colIndex {
-    return [self getDateWithIndex:colIndex format:@"yyyy-MM-dd"];
+    return [self getDateTimeWithIndex:colIndex format:@"yyyy-MM-dd"];
 }
 
 -(NSDate *) getDateWithName:(NSString *)colName {
-    return [self getDateWithName:colName format:@"yyyy-MM-dd"];
+    return [self getDateTimeWithName:colName format:@"yyyy-MM-dd"];
 }
+
+-(NSDate *) getDateTimeWithIndex:(int)colIndex {
+    return [self getDateTimeWithIndex:colIndex format:@"yyyy-MM-dd HH:mm:ss" ];
+}
+
+-(NSDate *) getDateTimeWithName:(NSString *)colName {
+    return [self getDateTimeWithName:colName format:@"yyyy-MM-dd HH:mm:ss"];
+}
+
 
 -(Boolean) isBOF {
     return (!_isEmpty) && (_curRow == 0);
@@ -322,6 +351,10 @@ static void PsqlLiteInitializer() {
 };
 
 static int sequence=0;
+
+- (PsqlStatement *) init {
+    return [super init];
+}
 
 - (PsqlStatement*) initWithString:(NSString*) sqlString
                      pqConnection:(PsqlConnection*) pqConnection {
@@ -523,6 +556,7 @@ static int sequence=0;
 
 - (void) close {
     parametres = nil;
+    [self unPrepare];
 }
 
 - (void) dealloc {
@@ -530,4 +564,3 @@ static int sequence=0;
 }
 
 @end
-

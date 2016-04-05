@@ -108,17 +108,93 @@
     [pst prepare:&error];
     if (!pst.isOK) NSLog(@"Error de connexió: %@\n", error);
     [pst setIntParmWithIndex:0 value:1000];
+
+    XCTAssertThrowsSpecificNamed([pst setIntParmWithIndex:1 value: 999], NSException,
+                                 @"paramOutOfRange");
+
     pres = [pst executeQuery:&error];
     
     NSMutableData *data = [pres getBytesWithIndex:0];
     [data writeToFile:@"/temp/thepic.jpg" atomically:true];
     
+    XCTAssertThrowsSpecificNamed([pres getStringWithName:@"notpresent"], NSException,
+                                 @"columnNotFound");
+    XCTAssertThrowsSpecificNamed([pres getStringWithIndex:2], NSException,
+                                 @"colOutOfRange");
+
     [pst close];
     
     [pres close];
     [pconn close];
     XCTAssert(!pconn.isConnected);
     
+}
+
+-(void) testRepeat {
+    PsqlConnection *pconn = [PsqlConnection alloc];
+    XCTAssertNotNil(pconn);
+    NSError *error;
+    
+    [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftw" password:@"ftw" error:&error];
+    XCTAssert(pconn.isConnected);
+    
+    
+    PsqlStatement *pst = [[PsqlStatement alloc] initWithString:@"select idviatge, nomviatge, dataviatge from viatge where idusuari = $1"
+                                                  pqConnection:pconn];
+    [pst prepare:&error];
+    [pst setStringParmWithIndex:0 value:@"jguillaumes"];
+    
+    PsqlResult *pres = [pst executeQuery:&error];
+    int count1 = [pres rowCount];
+    [pres close];
+    
+    // [pst close];
+    
+    pres = [pst executeQuery:&error];
+    if (error != NULL) {
+        NSLog(@"Error: %@", error);
+    }
+    
+    int count2 = [pres rowCount];
+    XCTAssertEqual(count1, count2);
+    NSLog(@"Count1: %d, Count2: %d",count1,count2);
+    
+    [pres close];
+    [pst close];
+    [pconn close];
+}
+
+-(void) testDates {
+    PsqlConnection *pconn = [PsqlConnection alloc];
+    XCTAssertNotNil(pconn);
+    NSError *error;
+    
+    [pconn connectWithUrl:@"postgres://localhost:5432/ftw" userName:@"ftw" password:@"ftw" error:&error];
+    XCTAssert(pconn.isConnected);
+    
+    
+    PsqlStatement *pst = [[PsqlStatement alloc] initWithString:@"select idfoto, nomfoto, datafoto from foto where idviatge = $1"
+                                                  pqConnection:pconn];
+    [pst prepare:&error];
+    [pst setLongParmWithIndex:0 value:2];
+
+    PsqlResult *pres = [pst executeQuery: &error];
+    XCTAssertNil(error);
+    if (error != NULL) {
+        NSLog(@"Error: %@", error);
+    }
+    
+    while(![pres isEOF]) {
+        int idfoto =    [pres getIntWithName:@"idfoto"];
+        NSDate *data =  [pres getDateTimeWithName:@"datafoto"];
+        NSDate *datan = [pres getDateTimeWithIndex:2];
+        NSString *nom = [pres getStringWithName:@"nomfoto"];
+        NSLog(@"Id: %d, data=%@, datan=%@, nom=[%@]", idfoto, data, datan, nom);
+        [pres nextRow];
+    }
+    [pres close];
+    [pst close];
+    [pconn close];
 }
 /*
 - (void)testPerformanceExample {
