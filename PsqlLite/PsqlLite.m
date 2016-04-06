@@ -15,6 +15,10 @@
 NSString *PsqlErrorDomain = @"name.guillaumes.jordi.PsqlLite";
 NSBundle *PsqlBundle = NULL;
 
+//+
+// Initialize: load bundle for internationalized strings
+// Frameworks don't do it by themselves
+//-
 __attribute__((constructor))
 static void PsqlLiteInitializer() {
     PsqlBundle = [NSBundle bundleForClass:[PsqlConnection class]];
@@ -23,6 +27,9 @@ static void PsqlLiteInitializer() {
 #endif
 }
 
+//+
+// Pseudoprivate properties
+//-
 @interface PsqlConnection()
 @property (readonly) PGconn *conn;
 @end
@@ -35,6 +42,11 @@ static void PsqlLiteInitializer() {
     return self;
 }
 
+//-
+// Establish a connection to the Postgresql server
+//
+// Use the URL notation:    postgres://server.name:port/database
+//-
 - (Boolean) connectWithUrl:(NSString*)url
                   userName:(NSString*)userName
                   password:(NSString*)password
@@ -53,34 +65,58 @@ static void PsqlLiteInitializer() {
     return true;
 }
 
+//+
+// Get the last error message
+//-
 - (NSString *) getErrorMessage {
     NSString *msg = [NSString stringWithFormat: @"%s", PQerrorMessage(_conn)];
     return msg;
 }
 
+//+
+// Return true if connected
+//-
 - (Boolean) isConnected {
     return PQstatus(_conn) == CONNECTION_OK;
 }
 
+//+
+// Begin transaction
+// If this method is not invoked, postgres will autocommit
+//-
 - (Boolean) begin {
     PGresult *pres = PQexec(_conn, "begin");
     return (PQresultStatus(pres) == PGRES_COMMAND_OK);
 }
 
+//+
+// Commit the current transaction
+// No action is taken to check if there is actually a transaction in progress
+//-
 - (Boolean) commit {
     PGresult *pres = PQexec(_conn, "commit");
     return (PQresultStatus(pres) == PGRES_COMMAND_OK);
 }
 
+//+
+// Rollback the current transaction
+// No action is taken to check if there is actually a transaction in progress
+//-
 - (Boolean) rollback {
     PGresult *pres = PQexec(_conn, "rollback");
     return (PQresultStatus(pres) == PGRES_COMMAND_OK);
 }
 
+//+
+// Close the psql connection
+//-
 - (void) close {
     PQfinish(_conn);
 }
 
+//+
+// Close the connection before destroying the instance
+//-
 - (void) destroy {
     [self close];
 }
@@ -91,6 +127,11 @@ static void PsqlLiteInitializer() {
 
 // MARK: - PsqlResult
 
+//+
+// Pseudoprivate method
+// We don't want to expose this method as public because it uses a libpq
+// typedef, so we would have to "publish" all the libpq interface
+//-
 @interface PsqlResult()
 -(PsqlResult*) initWithResult:(PGresult *) pres;
 @end
@@ -99,13 +140,18 @@ static void PsqlLiteInitializer() {
     PGresult *theResult;
 }
 
+//+
+// Initialize the object using a PGresult structure
+// PGResult is the opaque typedef used by libpq to respresent the
+// result of a command or query.
+//-
 -(PsqlResult *) initWithResult:(PGresult *) result {
     self = [super init];
-    theResult = result;
-    _rowCount = PQntuples(theResult);
-    _columnCount = PQnfields(theResult);
-    _curRow = 0;
-    if (_rowCount > 0) {
+    theResult = result;                     // Save the PGresult pointer
+    _rowCount = PQntuples(theResult);       // Get the number of rows
+    _columnCount = PQnfields(theResult);    // Get the number of columns
+    _curRow = 0;                            // Set up at first row
+    if (_rowCount > 0) {                    // Check if we have actual data
         _isEmpty = false;
     } else {
         _isEmpty = true;
@@ -113,7 +159,16 @@ static void PsqlLiteInitializer() {
     return self;
 }
 
-
+//+
+// Return a string value using the index in the returned column
+// The column number is zero based. If the column number is out of range
+// we throw an Obj-C exception, so we will rash the program.
+// An invalid column is a programmer error, so we crash instead of returning
+// an error or a swift-catchable exception, as per Apple guidelines.
+//
+// This method allows to specify the encoding in which psql returns the string
+// data. For a mac client it _should_ be UTF-8.
+//-
 -(NSString *) getStringWithIndex:(int) colIndex encoding:(NSStringEncoding) encoding {
     NSString *theValue = NULL;
     
@@ -123,9 +178,10 @@ static void PsqlLiteInitializer() {
                                                         userInfo:NULL ];
         [exc raise];
     }
-    if (!self.isEOF) {
+    if (!self.isEOF) {                      // Check we are not past end of data
         if (PQgetisnull(theResult, _curRow, colIndex) != 1) {
-            // theValue = [NSString stringWithFormat:@"%s", PQgetvalue(theResult, _curRow, colIndex)];
+            // Get the string value as NSString (libpq returns a C String)
+            // The returned C string will be translated from the specified encoding
             theValue = [[NSString alloc] initWithCString:PQgetvalue(theResult, _curRow, colIndex)
                                                 encoding:encoding];
         }
@@ -133,10 +189,26 @@ static void PsqlLiteInitializer() {
     return theValue;
 }
 
+
+//+
+// Return a string value using the index in the returned column
+// The column number is zero based
+//
+// This method assumes the client encoding is UTF-8
+//-
 -(NSString *) getStringWithIndex:(int) colIndex {
     return [self getStringWithIndex:colIndex encoding:NSUTF8StringEncoding];
 }
 
+//+
+// Return a string value using the column or result name specified in the query.
+// If the passed column name does not exist, we throw an Obj-C exception so
+// we crash the program. An invalid column is a programmer error, so we crash
+// instead of returning an error or a swift-catchable exception, as per Apple guidelines.
+//
+// This method allows to specify the encoding in which psql returns the string
+// data. For a mac client it _should_ be UTF-8.
+//-
 -(NSString *) getStringWithName:(NSString *) colName encoding:(NSStringEncoding) encoding {
     NSString *theValue = NULL;
     int colNum;
@@ -157,6 +229,14 @@ static void PsqlLiteInitializer() {
     return theValue;
 }
 
+//+
+// Return a string value using the column or result name specified in the query.
+// If the passed column name does not exist, we throw an Obj-C exception so
+// we crash the program. An invalid column is a programmer error, so we crash
+// instead of returning an error or a swift-catchable exception, as per Apple guidelines.
+//
+// This method assumes the client encoding is UTF-8.
+//-
 -(NSString *) getStringWithName:(NSString *) colName {
     return [self getStringWithName:colName encoding: NSUTF8StringEncoding];
 }
