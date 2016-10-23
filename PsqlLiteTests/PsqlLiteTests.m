@@ -93,11 +93,11 @@
     PsqlResult *pres = [pst executeQuery:&error];
     XCTAssertNotNil(pres);
     XCTAssert(![pres isEmpty]);
-    while(![pres isEOF]) {
+    while(!pres.isEOF) {
         NSNumber *idviatge   = [pres getNumberWithName:@"idviatge"];
         NSString *nomViatge  = [pres getStringWithName:@"nomviatge"];
         NSDate   *dataviatge = [pres getDateWithIndex:2];
-        NSLog([NSString stringWithFormat:@"%@ - %@: %@", idviatge, nomViatge, dataviatge]);
+        NSLog(@"%@", [NSString stringWithFormat:@"%@ - %@: %@", idviatge, nomViatge, dataviatge]);
         [pres nextRow];
     }
  
@@ -145,7 +145,7 @@
     [pst setStringParmWithIndex:0 value:@"jguillaumes"];
     
     PsqlResult *pres = [pst executeQuery:&error];
-    int count1 = [pres rowCount];
+    int count1 = pres.rowCount;
     [pres close];
     
     // [pst close];
@@ -155,7 +155,7 @@
         NSLog(@"Error: %@", error);
     }
     
-    int count2 = [pres rowCount];
+    int count2 = pres.rowCount;
     XCTAssertEqual(count1, count2);
     NSLog(@"Count1: %d, Count2: %d",count1,count2);
     
@@ -184,7 +184,7 @@
         NSLog(@"Error: %@", error);
     }
     
-    while(![pres isEOF]) {
+    while(!pres.isEOF) {
         int idfoto =    [pres getIntWithName:@"idfoto"];
         NSDate *data =  [pres getDateTimeWithName:@"datafoto"];
         NSDate *datan = [pres getDateTimeWithIndex:2];

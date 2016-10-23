@@ -23,11 +23,11 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
                   userName:(nonnull NSString *)userName
                   password:(nonnull NSString *)password
                      error:(NSError **)error;
-- (nonnull NSString *) getErrorMessage;
-- (Boolean) isConnected;
-- (Boolean) begin;
-- (Boolean) commit;
-- (Boolean) rollback;
+@property (NS_NONATOMIC_IOSONLY, getter=getErrorMessage, readonly, copy) NSString * _Nonnull errorMessage;
+@property (NS_NONATOMIC_IOSONLY, getter=isConnected, readonly) Boolean connected;
+@property (NS_NONATOMIC_IOSONLY, readonly) Boolean begin;
+@property (NS_NONATOMIC_IOSONLY, readonly) Boolean commit;
+@property (NS_NONATOMIC_IOSONLY, readonly) Boolean rollback;
 - (void) close;
 - (void) destroy;
 @end
@@ -40,9 +40,9 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 @property (readonly) Boolean isEOF;
 @property (readonly) Boolean isEmpty;
 
--(Boolean) nextRow;
--(Boolean) firstRow;
--(Boolean) lastRow;
+@property (NS_NONATOMIC_IOSONLY, readonly) Boolean nextRow;
+@property (NS_NONATOMIC_IOSONLY, readonly) Boolean firstRow;
+@property (NS_NONATOMIC_IOSONLY, readonly) Boolean lastRow;
 
 
 -(nullable NSString *) getStringWithIndex:(int) colIndex;
@@ -81,7 +81,10 @@ FOUNDATION_EXPORT const unsigned char PsqlLiteVersionString[];
 - (Boolean) setIntParmWithIndex:(int)index value:(int) value;
 - (Boolean) setLongParmWithIndex:(int)index value:(long) value;
 - (Boolean) setDoubleParmWithIndex:(int)index value:(double) value;
-- (nonnull NSString *) getStatementName;
+- (Boolean) setDateParmWithIndex:(int)index value:(nullable NSDate*) value;
+- (Boolean) setDateTimeParmWithIndex:(int)index value:(nullable NSDate*) value;
+- (Boolean) setByteaParmWithIndex:(int)index value:(nullable NSData *)value ;
+@property (NS_NONATOMIC_IOSONLY, getter=getStatementName, readonly, copy) NSString * _Nonnull statementName;
 
 - (int) execute:(NSError **)error;
 - (nullable PsqlResult *) executeQuery:( NSError  **)error;

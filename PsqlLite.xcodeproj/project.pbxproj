@@ -11,7 +11,6 @@
 		5F05D2B91CA94D1600EB31B1 /* English.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 5F05D2B81CA94D1600EB31B1 /* English.lproj */; };
 		5F736A351CA834C4002599A7 /* libpq.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F736A341CA834C4002599A7 /* libpq.a */; };
 		5FB37A5A1CAE9F27007C47BA /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5FB37A581CAE9F27007C47BA /* LICENSE.txt */; };
-		5FB37A5B1CAE9F27007C47BA /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 5FB37A591CAE9F27007C47BA /* README.md */; };
 		5FB37A5C1CAE9FF1007C47BA /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 5FB37A591CAE9F27007C47BA /* README.md */; };
 		5FF29FC51CA8103400A6D937 /* PsqlLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 5FF29FC41CA8103400A6D937 /* PsqlLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5FF29FCC1CA8103400A6D937 /* PsqlLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FF29FC11CA8103300A6D937 /* PsqlLite.framework */; };
@@ -162,11 +161,12 @@
 		5FF29FB81CA8103300A6D937 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Jordi Guillaumes Pons";
 				TargetAttributes = {
 					5FF29FC01CA8103300A6D937 = {
 						CreatedOnToolsVersion = 7.3;
+						DevelopmentTeam = 67BFW68X76;
 					};
 					5FF29FCA1CA8103400A6D937 = {
 						CreatedOnToolsVersion = 7.3;
@@ -217,7 +217,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5FB37A5B1CAE9F27007C47BA /* README.md in Sources */,
 				5FF29FDC1CA810D200A6D937 /* PsqlLite.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -256,8 +255,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -305,8 +306,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -335,6 +338,7 @@
 		5FF29FD61CA8103400A6D937 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -349,6 +353,7 @@
 					/opt/local/lib/postgresql95,
 					"$(PROJECT_DIR)/PsqlLite",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = name.guillaumes.jordi.PsqlLite;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -359,6 +364,7 @@
 		5FF29FD71CA8103400A6D937 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -373,6 +379,7 @@
 					/opt/local/lib/postgresql95,
 					"$(PROJECT_DIR)/PsqlLite",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = name.guillaumes.jordi.PsqlLite;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

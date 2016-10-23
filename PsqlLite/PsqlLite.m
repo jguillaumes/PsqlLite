@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #import <libpq-fe.h>
 
+#define BYTEA_OID
+
 // MARK: - PsqlConnection
 
 NSString *PsqlErrorDomain = @"name.guillaumes.jordi.PsqlLite";
@@ -52,7 +54,7 @@ static void PsqlLiteInitializer() {
                   password:(NSString*)password
                      error:(NSError**)error {
     NSString *theUrl = [ NSString stringWithFormat:@"%@?user=%@&password=%@", url, userName, password] ;
-    _conn = PQconnectdb([theUrl UTF8String]);
+    _conn = PQconnectdb(theUrl.UTF8String);
     if (![self isConnected]) {
         if (error != NULL) {
             NSDictionary *userInfo = @{NSLocalizedDescriptionKey : [self getErrorMessage] };
@@ -214,7 +216,7 @@ static void PsqlLiteInitializer() {
     int colNum;
     
     if (!self.isEOF) {
-        colNum = PQfnumber(theResult, [colName UTF8String]);
+        colNum = PQfnumber(theResult, colName.UTF8String);
         if (colNum != -1) {
             theValue = [self getStringWithIndex:colNum encoding: encoding];
         } else {
@@ -246,7 +248,7 @@ static void PsqlLiteInitializer() {
     int theInt = 0;
     NSString *valstr = [self getStringWithIndex:colIndex];
     if (valstr != NULL) {
-        theInt = [valstr intValue];
+        theInt = valstr.intValue;
     }
     return theInt;
 }
@@ -255,7 +257,7 @@ static void PsqlLiteInitializer() {
     int theInt = 0;
     NSString *valstr = [self getStringWithName:colName];
     if (valstr != NULL) {
-        theInt = [valstr intValue];
+        theInt = valstr.intValue;
     }
     return theInt;
 }
@@ -287,7 +289,7 @@ static void PsqlLiteInitializer() {
     NSMutableData *theData = nil;
     unsigned char *buffer = NULL;
     unsigned char *binBuffer = NULL;
-    int len=0;
+    // int len=0;
     size_t binLen=0;
     
     if (colIndex < 0 || colIndex > _columnCount) {
@@ -298,7 +300,7 @@ static void PsqlLiteInitializer() {
     }
     if (!self.isEOF) {
         if (PQgetisnull(theResult, _curRow, colIndex) != 1) {
-            len    = PQgetlength(theResult, _curRow, colIndex);
+            // len    = PQgetlength(theResult, _curRow, colIndex);
             buffer = (unsigned char *) PQgetvalue(theResult, _curRow, colIndex);
             binBuffer = PQunescapeBytea(buffer, &binLen);
             theData = [[NSMutableData alloc] initWithBytes:binBuffer length:binLen];
@@ -313,7 +315,7 @@ static void PsqlLiteInitializer() {
     int colNum;
     
     if (!self.isEOF) {
-        colNum = PQfnumber(theResult, [colName UTF8String]);
+        colNum = PQfnumber(theResult, colName.UTF8String);
         if (colNum != -1) {
             theData = [self getBytesWithIndex:colNum];
         } else {
@@ -331,7 +333,7 @@ static void PsqlLiteInitializer() {
     NSString *valstr = [self getStringWithIndex:colIndex];
     if (valstr != NULL) {
         NSDateFormatter *df = [[NSDateFormatter alloc] init];
-        [df setDateFormat:format];
+        df.dateFormat = format;
         [df setLenient:true];
         theDate = [df dateFromString:valstr];
     }
@@ -343,7 +345,7 @@ static void PsqlLiteInitializer() {
     int colNum = 0;
     
     if (!self.isEOF) {
-        colNum = PQfnumber(theResult, [colName UTF8String]);
+        colNum = PQfnumber(theResult, colName.UTF8String);
         if (colNum != -1) {
             theDate = [self getDateTimeWithIndex:colNum format:format];
         } else {
@@ -428,6 +430,7 @@ static void PsqlLiteInitializer() {
     PsqlConnection __weak *theConn;
     int numParams;
     NSMutableArray *parametres;
+    NSMutableArray *byteParams;
 };
 
 static int sequence=0;
@@ -467,13 +470,14 @@ static int sequence=0;
     NSLog(@"Created statement %@",stmtName);
 #endif
 
-    PGresult *pres = PQprepare([theConn conn], [stmtName UTF8String],
-                               [theSqlString UTF8String], 0, NULL);
+    PGresult *pres = PQprepare(theConn.conn, stmtName.UTF8String,
+                               theSqlString.UTF8String, 0, NULL);
     if (pres != NULL) {
         if (PQresultStatus(pres) == PGRES_COMMAND_OK) {
-            pres = PQdescribePrepared(theConn.conn, [stmtName UTF8String]);
+            pres = PQdescribePrepared(theConn.conn, stmtName.UTF8String);
             numParams = PQnparams(pres);
             parametres = [[NSMutableArray alloc] initWithCapacity:numParams];
+            byteParams = [[NSMutableArray alloc] initWithCapacity:numParams];
             _isOK = true;
             if (error != NULL) *error = nil;
         }
@@ -492,6 +496,7 @@ static int sequence=0;
 - (Boolean) setStringParmWithIndex:(int)index value:(NSString *) value {
     if (index < numParams && index >= 0) {
         parametres[index] = value;
+        byteParams[index] = [NSNull null];
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
@@ -508,6 +513,7 @@ static int sequence=0;
     
     if (index < numParams && index >= 0) {
         parametres[index] = valstr;
+        byteParams[index] = [NSNull null];
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
@@ -523,6 +529,7 @@ static int sequence=0;
     
     if (index < numParams && index >= 0) {
         parametres[index] = valstr;
+        byteParams[index] = [NSNull null];
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
@@ -539,6 +546,57 @@ static int sequence=0;
     
     if (index < numParams && index >= 0) {
         parametres[index] = valstr;
+        byteParams[index] = [NSNull null];
+        return true;
+    } else {
+        NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"paramOutOfRange", nil, PsqlBundle, @"Parametre fora d'abast")
+                                                    userInfo:NULL ];
+        [exc raise];
+        return false;
+    }
+}
+
+
+- (Boolean) setDateParmWithIndex:(int)index value:(nullable NSDate *)value {
+    if (index < numParams && index >= 0) {
+        NSDateFormatter *df = [[NSDateFormatter alloc] init];
+        df.dateFormat = @"yyyy-MM-dd";
+        NSString *dateParm = [[NSString alloc] initWithString:[df stringFromDate:value]];
+        parametres[index] = dateParm;
+        byteParams[index] = [NSNull null];
+        return true;
+    } else {
+        NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"paramOutOfRange", nil, PsqlBundle, @"Parametre fora d'abast")
+                                                    userInfo:NULL ];
+        [exc raise];
+        return false;
+    }
+}
+
+- (Boolean) setDateTimeParmWithIndex:(int)index value:(nullable NSDate *)value {
+    if (index < numParams && index >= 0) {
+        NSDateFormatter *df = [[NSDateFormatter alloc] init];
+        df.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+        NSString *dateParm = [[NSString alloc] initWithString:[df stringFromDate:value]];
+        parametres[index] = dateParm;
+        byteParams[index] = [NSNull null];
+        return true;
+    } else {
+        NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
+                                                      reason:NSLocalizedStringFromTableInBundle(@"paramOutOfRange", nil, PsqlBundle, @"Parametre fora d'abast")
+                                                    userInfo:NULL ];
+        [exc raise];
+        return false;
+    }
+}
+
+
+- (Boolean) setByteaParmWithIndex:(int)index value:(NSData *)value {
+    if (index < numParams && index >= 0) {
+        parametres[index] = [NSNull null];
+        byteParams[index] = value;
         return true;
     } else {
         NSException *exc = [[NSException alloc] initWithName:@"paramOutOfRange"
@@ -557,14 +615,21 @@ static int sequence=0;
     
     if (_isOK) {
         char **paramValues = calloc(sizeof(char*), numParams);
-        int *paramLengths = calloc(sizeof(int), numParams);
-        int *paramFormats = calloc(sizeof(int), numParams);
+        int *paramLengths  = calloc(sizeof(int), numParams);
+        int *paramFormats  = calloc(sizeof(int), numParams);
         for (i=0; i<numParams; i++) {
-            paramFormats[i] = 0;
-            paramLengths[i] = 0;
-            paramValues[i]  = (char *) [parametres[i] UTF8String];
+            if (byteParams[i] == [NSNull null]) {
+                paramFormats[i] = 0;        // String data
+                paramLengths[i] = 0;
+                paramValues[i]  = (char *) [parametres[i] UTF8String];
+            } else {
+                NSData *theData = byteParams[i];
+                paramFormats[i] = 1;        // Binary data
+                paramLengths[i] = (int)    theData.length;
+                paramValues[i]  = (char *) theData.bytes;
+            }
         }
-        res = PQexecPrepared([theConn conn], [stmtName UTF8String], numParams, paramValues, paramLengths, paramFormats, 0);
+        res = PQexecPrepared(theConn.conn, stmtName.UTF8String, numParams, paramValues, paramLengths, paramFormats, 0);
         free(paramValues);
         free(paramLengths);
         free(paramFormats);
@@ -602,7 +667,7 @@ static int sequence=0;
             paramLengths[i] = 0;
             paramValues[i]  = (char *) [parametres[i] UTF8String];
         }
-        res = PQexecPrepared([theConn conn], [stmtName UTF8String], numParams, paramValues, paramLengths, paramFormats, 0);
+        res = PQexecPrepared(theConn.conn, stmtName.UTF8String, numParams, paramValues, paramLengths, paramFormats, 0);
         free(paramValues);
         free(paramLengths);
         free(paramFormats);
@@ -629,13 +694,14 @@ static int sequence=0;
 #ifdef DEBUG
     NSLog(@"Deallocating prepared statement %@",stmtName);
 #endif
-    PQexec([theConn conn], [deallocCmd cStringUsingEncoding:NSUTF8StringEncoding]);
+    PQexec(theConn.conn, [deallocCmd cStringUsingEncoding:NSUTF8StringEncoding]);
     _isOK = false;
     stmtName = NULL;
 }
 
 - (void) close {
     parametres = nil;
+    byteParams = nil;
     [self unPrepare];
 }
 
